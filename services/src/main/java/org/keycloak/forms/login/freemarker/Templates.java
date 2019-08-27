@@ -60,6 +60,8 @@ public class Templates {
                 return "login-x509-info.ftl";
             case SAML_POST_FORM:
                 return "saml-post-form.ftl";
+            case LOGIN_EMAIL_CODE:
+                return "login-email-code.ftl";
             default:
                 throw new IllegalArgumentException();
         }

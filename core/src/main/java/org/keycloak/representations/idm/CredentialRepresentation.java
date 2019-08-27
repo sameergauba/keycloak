@@ -31,6 +31,7 @@ public class CredentialRepresentation {
     public static final String HOTP = "hotp";
     public static final String CLIENT_CERT = "cert";
     public static final String KERBEROS = "kerberos";
+    public static final String CODE = "code";
 
     protected String type;
     protected String device;

@@ -14,17 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.keycloak.credential;
 
-package org.keycloak.forms.login;
+import org.keycloak.models.KeycloakSession;
 
 /**
- * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
+ * @author Sameer Gauba
+ * @version $Revision: 1 $
  */
-public enum LoginFormsPages {
+public class EmailCodeCredentialProviderFactory implements CredentialProviderFactory<EmailCodeCredentialProvider> {
+    public static final String PROVIDER_ID="keycloak-code";
+    @Override
+    public EmailCodeCredentialProvider create(KeycloakSession session) {
+        return new EmailCodeCredentialProvider(session);
+    }
 
-    LOGIN, LOGIN_TOTP, LOGIN_EMAIL_CODE, LOGIN_CONFIG_TOTP, LOGIN_VERIFY_EMAIL,
-    LOGIN_IDP_LINK_CONFIRM, LOGIN_IDP_LINK_EMAIL,
-    OAUTH_GRANT, LOGIN_RESET_PASSWORD, LOGIN_UPDATE_PASSWORD, REGISTER, INFO, ERROR, LOGIN_UPDATE_PROFILE, 
-    LOGIN_PAGE_EXPIRED, CODE, X509_CONFIRM, SAML_POST_FORM;
+    @Override
+    public String getId() {
+        return PROVIDER_ID;
+    }
 
 }

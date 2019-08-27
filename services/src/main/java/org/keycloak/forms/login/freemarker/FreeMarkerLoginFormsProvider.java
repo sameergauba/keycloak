@@ -682,6 +682,11 @@ public class FreeMarkerLoginFormsProvider implements LoginFormsProvider {
     }
 
     @Override
+    public Response createLoginViaEmailCode() {
+        return createResponse(LoginFormsPages.LOGIN_EMAIL_CODE);
+    }
+
+    @Override
     public void close() {
     }
 
