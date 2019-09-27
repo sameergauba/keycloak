@@ -1,8 +1,10 @@
 package org.keycloak.authentication.authenticators.browser;
 
+import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.Authenticator;
+import org.keycloak.email.DefaultEmailSenderProvider;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailSenderProvider;
 import org.keycloak.email.EmailTemplateProvider;
@@ -28,6 +30,7 @@ import java.util.List;
  */
 public class EmailCodeAuthenticator implements Authenticator {
 
+    private static final Logger logger = Logger.getLogger(DefaultEmailSenderProvider.class);
     @Override
     public void action(AuthenticationFlowContext context) {
         validateCode(context);
@@ -35,7 +38,7 @@ public class EmailCodeAuthenticator implements Authenticator {
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
-        Response challengeResponse = challenge(context, null);
+        Response challengeResponse = challenge2(context, null);
         context.challenge(challengeResponse);
     }
 
@@ -48,29 +51,47 @@ public class EmailCodeAuthenticator implements Authenticator {
             return;
         }
 
+        if (inputData.containsKey("resend")) {
+            context.getEvent().user(context.getUser())
+                    .error(Errors.INVALID_USER_CREDENTIALS);
+            Response challengeResponse = challenge2(context, Messages.EMAIL_CODE_RESENT);
+            context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, challengeResponse);
+            return;
+        }
+
         List<UserCredentialModel> credentials = new LinkedList<>();
 
         String code = inputData.getFirst(CredentialRepresentation.CODE);
+        logger.info("Code received : " + code);
         if (code == null) {
-            Response challengeResponse = challenge(context, null);
+            Response challengeResponse = challenge2(context, null);
             context.challenge(challengeResponse);
             return;
         }
 
         credentials.add(UserCredentialModel.code(code));
 
+        logger.info("Before Validating code");
+
         //boolean valid = context.getSession().users().validCredentials(context.getSession(), context.getRealm(), context.getUser(), credentials);
         boolean valid = context.getSession().userCredentialManager().isValid(context.getRealm(), context.getUser(),
                 UserCredentialModel.code(code));
+
+
+        logger.info("After Validating code | valid : " + valid );
+
         if (valid) {
+
+            logger.info("Returning success.");
             context.success();
             return;
-        }
+        } else {
 
-        context.getEvent().user(context.getUser())
-                .error(Errors.INVALID_USER_CREDENTIALS);
-        Response challengeResponse = challenge(context, Messages.INVALID_EMAIL_CODE);
-        context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, challengeResponse);
+            context.getEvent().user(context.getUser())
+                    .error(Errors.INVALID_USER_CREDENTIALS);
+            Response challengeResponse = challenge2(context, Messages.INVALID_EMAIL_CODE);
+            context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS, challengeResponse);
+        }
     }
 
     @Override
@@ -78,35 +99,42 @@ public class EmailCodeAuthenticator implements Authenticator {
         return true;
     }
 
-    protected Response challenge(AuthenticationFlowContext context, String error) {
+    //@Override
+    protected Response createLoginForm(LoginFormsProvider form) {
+        return form.createLoginViaEmailCode();
+    }
+
+    protected Response challenge2(AuthenticationFlowContext context, String error) {
 
         LoginFormsProvider forms = context.form();
-        if (error != null) forms.setError(error);
+        //if (error != null) forms.setError(error);
 
-        String code = Integer.toHexString((int) ((2 << 24) * Math.random()));
-
-        context.getSession().userCredentialManager().updateCredential(context.getRealm(), context.getUser(), UserCredentialModel.code(code));
-
-        try {
-            context.getSession()
-                    .getProvider(EmailTemplateProvider.class)
-                    //.setAuthenticationSession(authSession)
-                    .setRealm(context.getRealm())
-                    .setUser(context.getUser())
-                    .sendEmailCode(code);
-        } catch (EmailException e) {
-            forms.setError(e.getMessage());
+        Boolean isOTPExpired = context.getSession().userCredentialManager().isOTPTimeout(context.getRealm(), context.getUser(), UserCredentialModel.code(null));
+        if(Messages.EMAIL_CODE_RESENT.equals(error)) {
+                forms.setSuccess(error);
+        } else if(isOTPExpired != null && isOTPExpired) {
+            forms.setError("OTP is expired. A new OTP is sent to the registered email id.");
+        } else {
+            if(error != null)
+                forms.setError(error);
         }
-       /* //TODO send mail asynchronous
-        EmailSenderProvider emailProvider = context.getSession().getProvider(EmailSenderProvider.class);
-        try {
+        if(isOTPExpired == null || isOTPExpired || Messages.EMAIL_CODE_RESENT.equals(error)) {
+            String code = Integer.toHexString((int) ((2 << 24) * Math.random()));
 
-            //TODO use an email template
-            emailProvider.send(null, context.getUser(), "Login Code", "Generated code: " + code, "Generated code: " + code);
-        } catch (EmailException e) {
-            forms.setError(e.getMessage());
-        }*/
+            context.getSession().userCredentialManager().updateCredential(context.getRealm(), context.getUser(), UserCredentialModel.code(code));
 
+            try {
+                context.getSession()
+                        .getProvider(EmailTemplateProvider.class)
+                        //.setAuthenticationSession(authSession)
+                        .setRealm(context.getRealm())
+                        .setUser(context.getUser())
+                        .sendEmailCode(code);
+            } catch (EmailException e) {
+                forms.setError(e.getMessage());
+            }
+        }
+        //return challenge(context, null);
         return forms.createLoginViaEmailCode();
     }
 

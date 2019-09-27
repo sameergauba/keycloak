@@ -310,6 +310,28 @@ public class UserCredentialStoreManager implements UserCredentialManager, OnUser
     }
 
     @Override
+    public Boolean isOTPTimeout(RealmModel realm, UserModel user, CredentialInput input) {
+        List<CredentialOTPExpireInfo> credentialProviders = getCredentialProviders(session, realm, CredentialOTPExpireInfo.class);
+        for(CredentialOTPExpireInfo provider : credentialProviders) {
+            if(provider.isConfiguredFor(realm, user, input.getType())) {
+                return provider.isEmailCodeExpired(realm, user, input);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Boolean removeOTPCreds(RealmModel realm, UserModel user, CredentialInput input) {
+        List<CredentialOTPExpireInfo> credentialProviders = getCredentialProviders(session, realm, CredentialOTPExpireInfo.class);
+        for(CredentialOTPExpireInfo provider : credentialProviders) {
+            if(provider.isConfiguredFor(realm, user, input.getType())) {
+                return provider.deleteCredential(realm, user, input);
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void onCache(RealmModel realm, CachedUserModel user, UserModel delegate) {
         List<OnUserCache> credentialProviders = getCredentialProviders(session, realm, OnUserCache.class);
         for (OnUserCache validator : credentialProviders) {

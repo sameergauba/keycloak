@@ -174,6 +174,11 @@ public class FreeMarkerEmailTemplateProvider implements EmailTemplateProvider {
         send("emailVerificationSubject", "email-verification.ftl", attributes);
     }
 
+    /**
+     * sends code verification mail
+     * @param code
+     * @throws EmailException
+     */
     @Override
     public void sendEmailCode(String code) throws EmailException {
         Map<String, Object> attributes = new HashMap<String, Object>(this.attributes);

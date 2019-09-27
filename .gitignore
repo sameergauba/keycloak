@@ -68,3 +68,5 @@ target
 # testsuite #
 #############
 *offline-token.txt
+
+keycloak-8.0.0-SNAPSHOT/

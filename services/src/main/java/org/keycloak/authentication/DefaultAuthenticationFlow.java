@@ -97,6 +97,7 @@ public class DefaultAuthenticationFlow implements AuthenticationFlow {
                 Response flowChallenge = null;
                 try {
                     flowChallenge = authenticationFlow.processAction(actionExecution);
+                    logger.info("Next challenge isAuthenticatorFlow : " + flowChallenge);
                 } catch (AuthenticationFlowException afe) {
                     if (model.isAlternative()) {
                         logger.debug("Thrown exception in alternative Subflow. Ignoring Subflow");
@@ -123,7 +124,9 @@ public class DefaultAuthenticationFlow implements AuthenticationFlow {
                 logger.debugv("action: {0}", model.getAuthenticator());
                 authenticator.action(result);
                 Response response = processResult(result, true);
+                logger.info("Response from current auth action : " + result.getStatus());
                 if (response == null) {
+                    logger.info("Response is null");
                     processor.getAuthenticationSession().removeAuthNote(AuthenticationProcessor.CURRENT_AUTHENTICATION_EXECUTION);
                     return processFlow();
                 } else return response;
@@ -233,6 +236,7 @@ public class DefaultAuthenticationFlow implements AuthenticationFlow {
             Response response = processResult(context, false);
             if (response != null) return response;
         }
+        logger.info("Process flow returning null");
         return null;
     }
 

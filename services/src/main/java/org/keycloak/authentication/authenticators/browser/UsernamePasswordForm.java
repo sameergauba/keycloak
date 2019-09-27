@@ -20,9 +20,11 @@ package org.keycloak.authentication.authenticators.browser;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
+import org.keycloak.credential.CredentialModel;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
+import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.services.ServicesLogger;
@@ -48,6 +50,7 @@ public class UsernamePasswordForm extends AbstractUsernameFormAuthenticator impl
         if (!validateForm(context, formData)) {
             return;
         }
+        context.getSession().userCredentialManager().removeOTPCreds(context.getRealm(), context.getUser(), UserCredentialModel.code(null));
         context.success();
     }
 

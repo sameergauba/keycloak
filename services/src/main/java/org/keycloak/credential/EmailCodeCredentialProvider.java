@@ -25,16 +25,13 @@ import org.keycloak.models.cache.UserCache;
 import org.keycloak.models.utils.HmacOTP;
 import org.keycloak.models.utils.TimeBasedOTP;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class EmailCodeCredentialProvider implements CredentialProvider, CredentialInputValidator, CredentialInputUpdater, OnUserCache {
+public class EmailCodeCredentialProvider implements CredentialProvider, CredentialInputValidator, CredentialInputUpdater, OnUserCache, CredentialOTPExpireInfo {
     private static final Logger logger = Logger.getLogger(EmailCodeCredentialProvider.class);
 
     protected KeycloakSession session;
@@ -84,11 +81,38 @@ public class EmailCodeCredentialProvider implements CredentialProvider, Credenti
         }
         model.setType(CredentialModel.CODE);
         model.setValue(inputModel.getValue());
-        model.setPeriod(60);
+        model.setPeriod(10);
+        model.setCreatedDate(Time.currentTimeMillis());
         if (model.getId() == null) {
             getCredentialStore().createCredential(realm, user, model);
         } else {
             getCredentialStore().updateCredential(realm, user, model);
+        }
+        UserCache userCache = session.userCache();
+        if (userCache != null) {
+            userCache.evict(realm, user);
+        }
+        return true;
+
+
+
+    }
+
+    @Override
+    public boolean deleteCredential(RealmModel realm, UserModel user, CredentialInput input) {
+        if (!supportsCredentialType(input.getType())) return false;
+
+        if (!(input instanceof UserCredentialModel)) {
+            logger.debug("Expected instance of UserCredentialModel for CredentialInput");
+            return false;
+        }
+        UserCredentialModel inputModel = (UserCredentialModel)input;
+        List<CredentialModel> models = null;
+        models = getCredentialStore().getStoredCredentialsByType(realm, user, CredentialModel.CODE);
+        if (models != null && models.size() > 0) {
+            for(CredentialModel model : models) {
+                getCredentialStore().removeStoredCredential(realm, user, model.getId());
+            }
         }
         UserCache userCache = session.userCache();
         if (userCache != null) {
@@ -124,41 +148,63 @@ public class EmailCodeCredentialProvider implements CredentialProvider, Credenti
 
     }
 
-    public static boolean validOTP(RealmModel realm, String token, String secret) {
-        OTPPolicy policy = realm.getOTPPolicy();
-        if (policy.getType().equals(UserCredentialModel.TOTP)) {
-            TimeBasedOTP validator = new TimeBasedOTP(policy.getAlgorithm(), policy.getDigits(), policy.getPeriod(), policy.getLookAheadWindow());
-            return validator.validateTOTP(token, secret.getBytes());
-        } else {
-            HmacOTP validator = new HmacOTP(policy.getDigits(), policy.getAlgorithm(), policy.getLookAheadWindow());
-            int c = validator.validateHOTP(token, secret, policy.getInitialCounter());
-            return c > -1;
-        }
-
-    }
-
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
         if (! (input instanceof UserCredentialModel)) {
-            logger.debug("Expected instance of UserCredentialModel for CredentialInput");
+            logger.info("Expected instance of UserCredentialModel for CredentialInput");
             return false;
 
         }
-        String token = ((UserCredentialModel) input).getValue();
-        if (token == null) {
+
+        Boolean otpExpired = isEmailCodeExpired(realm, user, input);
+
+        if(otpExpired == null || !otpExpired) {
+            String token = ((UserCredentialModel) input).getValue();
+            logger.debug("Token found for user : " + token);
+            if (token == null) {
+                return false;
+            }
+            List<CredentialModel> creds = getCachedCredentials(user, CredentialModel.CODE);
+            if (creds == null) {
+                creds = getCredentialStore().getStoredCredentialsByType(realm, user, CredentialModel.CODE);
+            } else {
+                logger.debugv("Cache hit for CODE for user {0}", user.getUsername());
+            }
+
+            logger.info("Credentials found for the user : " + creds != null ? creds.size() : 0);
+            for (CredentialModel cred : creds) {
+                if (token.equals(cred.getValue())) {
+                    logger.info("Token matched returning true");
+                    return true;
+                }
+            }
+            logger.info("Token not matched returning false  ");
+            return false;
+        } else {
             return false;
         }
+    }
+
+    @Override
+    public Boolean isEmailCodeExpired(RealmModel realm, UserModel user, CredentialInput input) {
         List<CredentialModel> creds = getCachedCredentials(user, CredentialModel.CODE);
         if (creds == null) {
             creds = getCredentialStore().getStoredCredentialsByType(realm, user, CredentialModel.CODE);
         } else {
             logger.debugv("Cache hit for CODE for user {0}", user.getUsername());
         }
-        for (CredentialModel cred : creds) {
-            if (token.equals(cred.getValue())) {
+
+        if(creds != null && creds.size() > 0) {
+            CredentialModel cred = creds.get(0);
+            Long now = System.currentTimeMillis();
+            Long created = cred.getCreatedDate();
+            Long diff = System.currentTimeMillis() - created;
+            if(diff > 300000) {
                 return true;
+            } else {
+                return false;
             }
         }
-        return false;
+        return null;
     }
 }
