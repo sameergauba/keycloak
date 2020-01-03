@@ -903,6 +903,8 @@ public class RealmAdapter implements RealmModel, JpaModel<RealmEntity> {
             otpPolicy.setLookAheadWindow(realm.getOtpPolicyLookAheadWindow());
             otpPolicy.setType(realm.getOtpPolicyType());
             otpPolicy.setPeriod(realm.getOtpPolicyPeriod());
+            otpPolicy.setEmailCodeResendLimit(realm.getEmailCodeResendLimit());
+            otpPolicy.setEmailCodeExpiry(realm.getEmailCodeExpiry());
         }
         return otpPolicy;
     }
@@ -915,6 +917,8 @@ public class RealmAdapter implements RealmModel, JpaModel<RealmEntity> {
         realm.setOtpPolicyLookAheadWindow(policy.getLookAheadWindow());
         realm.setOtpPolicyType(policy.getType());
         realm.setOtpPolicyPeriod(policy.getPeriod());
+        realm.setEmailCodeExpiry(policy.getEmailCodeExpiry());
+        realm.setEmailCodeResendLimit(policy.getEmailCodeResendLimit());
         em.flush();
     }
 

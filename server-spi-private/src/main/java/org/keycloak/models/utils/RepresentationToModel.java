@@ -143,6 +143,8 @@ public class RepresentationToModel {
         if (rep.getOtpPolicyAlgorithm() != null) policy.setAlgorithm(rep.getOtpPolicyAlgorithm());
         if (rep.getOtpPolicyDigits() != null) policy.setDigits(rep.getOtpPolicyDigits());
         if (rep.getOtpPolicyPeriod() != null) policy.setPeriod(rep.getOtpPolicyPeriod());
+        if(rep.getEmailCodeExpiry() != null) policy.setEmailCodeExpiry(rep.getEmailCodeExpiry());
+        if(rep.getEmailCodeResendLimit() != null) policy.setEmailCodeResendLimit(rep.getEmailCodeResendLimit());
         return policy;
 
     }

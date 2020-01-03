@@ -43,6 +43,24 @@ public class OTPPolicy implements Serializable {
     protected int digits;
     protected int lookAheadWindow;
     protected int period;
+    protected int emailCodeResendLimit;
+    protected int emailCodeExpiry;
+
+    public int getEmailCodeResendLimit() {
+        return emailCodeResendLimit;
+    }
+
+    public void setEmailCodeResendLimit(Integer emailCodeResendLimit) {
+        this.emailCodeResendLimit = emailCodeResendLimit;
+    }
+
+    public int getEmailCodeExpiry() {
+        return emailCodeExpiry;
+    }
+
+    public void setEmailCodeExpiry(Integer emailCodeExpiry) {
+        this.emailCodeExpiry = emailCodeExpiry;
+    }
 
     private static final Map<String, String> algToKeyUriAlg = new HashMap<>();
 
@@ -57,16 +75,18 @@ public class OTPPolicy implements Serializable {
     public OTPPolicy() {
     }
 
-    public OTPPolicy(String type, String algorithm, int initialCounter, int digits, int lookAheadWindow, int period) {
+    public OTPPolicy(String type, String algorithm, int initialCounter, int digits, int lookAheadWindow, int period, int resendLimit, int emailCodeExpiry) {
         this.type = type;
         this.algorithm = algorithm;
         this.initialCounter = initialCounter;
         this.digits = digits;
         this.lookAheadWindow = lookAheadWindow;
         this.period = period;
+        this.emailCodeResendLimit = resendLimit;
+        this.emailCodeExpiry = emailCodeExpiry;
     }
 
-    public static OTPPolicy DEFAULT_POLICY = new OTPPolicy(UserCredentialModel.TOTP, HmacOTP.HMAC_SHA1, 0, 6, 1, 30);
+    public static OTPPolicy DEFAULT_POLICY = new OTPPolicy(UserCredentialModel.TOTP, HmacOTP.HMAC_SHA1, 0, 6, 1, 30, 3, 5);
 
     public String getAlgorithmKey() {
         return algToKeyUriAlg.containsKey(algorithm) ? algToKeyUriAlg.get(algorithm) : algorithm;

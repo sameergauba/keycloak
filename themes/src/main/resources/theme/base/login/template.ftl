@@ -84,5 +84,8 @@
     </div>
   </div>
 </body>
+<script type="text/javascript">
+    console.log("js working.");
+</script>
 </html>
 </#macro>

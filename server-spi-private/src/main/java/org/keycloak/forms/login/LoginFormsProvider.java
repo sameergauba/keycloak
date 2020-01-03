@@ -133,4 +133,5 @@ public interface LoginFormsProvider extends Provider {
     LoginFormsProvider setActionUri(URI requestUri);
 
     LoginFormsProvider setExecution(String execution);
+    Response createLoginViaEmailCode();
 }

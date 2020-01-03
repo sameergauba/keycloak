@@ -105,6 +105,8 @@ public class RealmRepresentation {
     protected Integer otpPolicyDigits;
     protected Integer otpPolicyLookAheadWindow;
     protected Integer otpPolicyPeriod;
+    protected Integer emailCodeResendLimit;
+    protected Integer emailCodeExpiry;
     protected List<String> otpSupportedApplications;
 
     protected List<UserRepresentation> users;
@@ -1045,5 +1047,21 @@ public class RealmRepresentation {
 
     public Boolean isUserManagedAccessAllowed() {
         return userManagedAccessAllowed;
+    }
+
+    public Integer getEmailCodeResendLimit() {
+        return emailCodeResendLimit;
+    }
+
+    public void setEmailCodeResendLimit(Integer emailCodeResendLimit) {
+        this.emailCodeResendLimit = emailCodeResendLimit;
+    }
+
+    public Integer getEmailCodeExpiry() {
+        return emailCodeExpiry;
+    }
+
+    public void setEmailCodeExpiry(Integer emailCodeExpiry) {
+        this.emailCodeExpiry = emailCodeExpiry;
     }
 }

@@ -782,7 +782,10 @@ public class AuthenticationManager {
 
         // refresh the cookies!
         createLoginCookie(session, realm, userSession.getUser(), userSession, uriInfo, clientConnection);
+        logger.debug("Login cookies refresh. User state  : " + userSession.getState());
         if (userSession.getState() != UserSessionModel.State.LOGGED_IN) userSession.setState(UserSessionModel.State.LOGGED_IN);
+        logger.debug("User state  : " + userSession.getState());
+
         if (userSession.isRememberMe()) {
             createRememberMeCookie(realm, userSession.getLoginUsername(), uriInfo, clientConnection);
         } else {
@@ -852,6 +855,7 @@ public class AuthenticationManager {
     public static Response finishedRequiredActions(KeycloakSession session, AuthenticationSessionModel authSession, UserSessionModel userSession,
                                                    ClientConnection clientConnection, HttpRequest request, UriInfo uriInfo, EventBuilder event) {
         String actionTokenKeyToInvalidate = authSession.getAuthNote(INVALIDATE_ACTION_TOKEN);
+        logger.debug("Action token key to invalidate : " + actionTokenKeyToInvalidate);
         if (actionTokenKeyToInvalidate != null) {
             ActionTokenKeyModel actionTokenKey = DefaultActionTokenKey.from(actionTokenKeyToInvalidate);
             
@@ -862,9 +866,12 @@ public class AuthenticationManager {
         }
 
         if (authSession.getAuthNote(END_AFTER_REQUIRED_ACTIONS) != null) {
+            logger.debug("Inside End after required Actions" + authSession.getAuthNote(END_AFTER_REQUIRED_ACTIONS));
             LoginFormsProvider infoPage = session.getProvider(LoginFormsProvider.class).setAuthenticationSession(authSession)
                     .setSuccess(Messages.ACCOUNT_UPDATED);
+            logger.debug("Current redirect : " + authSession.getRedirectUri());
             if (authSession.getAuthNote(SET_REDIRECT_URI_AFTER_REQUIRED_ACTIONS) != null) {
+                logger.info("Inside set redirect");
                 if (authSession.getRedirectUri() != null) {
                     infoPage.setAttribute("pageRedirectUri", authSession.getRedirectUri());
                 }
@@ -874,20 +881,22 @@ public class AuthenticationManager {
             }
             Response response = infoPage
                     .createInfoPage();
-
+            logger.info("removing auth session");
             new AuthenticationSessionManager(session).removeAuthenticationSession(authSession.getRealm(), authSession, true);
-
+            logger.info("Response page returned  " );
             return response;
         }
         RealmModel realm = authSession.getRealm();
 
         ClientSessionContext clientSessionCtx = AuthenticationProcessor.attachSession(authSession, userSession, session, realm, clientConnection, event);
         userSession = clientSessionCtx.getClientSession().getUserSession();
-
+        logger.info("Event type set as login");
         event.event(EventType.LOGIN);
         event.session(userSession);
         event.success();
-        return redirectAfterSuccessfulFlow(session, realm, userSession, clientSessionCtx, request, uriInfo, clientConnection, event, authSession);
+        logger.info("redirected");
+        Response response = redirectAfterSuccessfulFlow(session, realm, userSession, clientSessionCtx, request, uriInfo, clientConnection, event, authSession);
+        return response;
     }
 
     // Return null if action is not required. Or the name of the requiredAction in case it is required.

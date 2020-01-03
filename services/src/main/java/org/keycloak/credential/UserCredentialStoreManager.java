@@ -17,11 +17,7 @@
 package org.keycloak.credential;
 
 import org.keycloak.common.util.reflections.Types;
-import org.keycloak.models.CredentialValidationOutput;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.UserCredentialManager;
-import org.keycloak.models.UserModel;
+import org.keycloak.models.*;
 import org.keycloak.models.cache.CachedUserModel;
 import org.keycloak.models.cache.OnUserCache;
 import org.keycloak.provider.ProviderFactory;
@@ -306,6 +302,31 @@ public class UserCredentialStoreManager implements UserCredentialManager, OnUser
             }
         }
 
+        return null;
+    }
+
+    @Override
+    public EmailCodeExpireData isOTPTimeout(RealmModel realm, UserModel user, CredentialInput input) {
+        List<CredentialOTPExpireInfo> credentialProviders = getCredentialProviders(session, realm, CredentialOTPExpireInfo.class);
+        for(CredentialOTPExpireInfo provider : credentialProviders) {
+            if(provider.isConfiguredFor(realm, user, input.getType())) {
+                EmailCodeExpireData limit = new EmailCodeExpireData();
+                limit.setOTPExpired(provider.isEmailCodeExpired(realm, user, input));
+                limit.setResendLimitExceeded(provider.isResendBreached(realm, user));
+                return provider.getEmailCodeExpireData(realm, user);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Boolean removeOTPCreds(RealmModel realm, UserModel user, CredentialInput input) {
+        List<CredentialOTPExpireInfo> credentialProviders = getCredentialProviders(session, realm, CredentialOTPExpireInfo.class);
+        for(CredentialOTPExpireInfo provider : credentialProviders) {
+            if(provider.isConfiguredFor(realm, user, input.getType())) {
+                return provider.deleteCredential(realm, user, input);
+            }
+        }
         return null;
     }
 

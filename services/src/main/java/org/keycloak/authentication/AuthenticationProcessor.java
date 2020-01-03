@@ -167,7 +167,7 @@ public class AuthenticationProcessor {
     }
 
     public AuthenticationProcessor setAuthenticationSession(AuthenticationSessionModel authenticationSession) {
-        this.authenticationSession = authenticationSession;
+         this.authenticationSession = authenticationSession;
         return this;
     }
 
@@ -871,10 +871,13 @@ public class AuthenticationProcessor {
 
         AuthenticationFlow authenticationFlow = createFlowExecution(this.flowId, model);
         Response challenge = authenticationFlow.processAction(execution);
+        logger.info("Next Challenge : " + challenge);
         if (challenge != null) return challenge;
         if (authenticationSession.getAuthenticatedUser() == null) {
+            logger.info("User is unknown");
             throw new AuthenticationFlowException(AuthenticationFlowError.UNKNOWN_USER);
         }
+        logger.info("Auth Completed Returning.");
         return authenticationComplete();
     }
 
@@ -1000,8 +1003,10 @@ public class AuthenticationProcessor {
 
         String nextRequiredAction = nextRequiredAction();
         if (nextRequiredAction != null) {
+            logger.info("Next required action is not null");
             return AuthenticationManager.redirectToRequiredActions(session, realm, authenticationSession, uriInfo, nextRequiredAction);
         } else {
+            logger.info("Finished Required Action");
             event.detail(Details.CODE_ID, authenticationSession.getParentSession().getId());  // todo This should be set elsewhere.  find out why tests fail.  Don't know where this is supposed to be set
             // the user has successfully logged in and we can clear his/her previous login failure attempts.
             logSuccess();

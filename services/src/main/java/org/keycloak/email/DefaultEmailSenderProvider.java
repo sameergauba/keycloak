@@ -59,6 +59,7 @@ public class DefaultEmailSenderProvider implements EmailSenderProvider {
     public void send(Map<String, String> config, UserModel user, String subject, String textBody, String htmlBody) throws EmailException {
         Transport transport = null;
         try {
+            logger.info("Inside email Sender");
             String address = retrieveEmailAddress(user);
 
             Properties props = new Properties();
@@ -116,6 +117,7 @@ public class DefaultEmailSenderProvider implements EmailSenderProvider {
                 multipart.addBodyPart(htmlPart);
             }
 
+            logger.info("Email Text Body added to multipart");
             SMTPMessage msg = new SMTPMessage(session);
             msg.setFrom(toInternetAddress(from, fromDisplayName));
 
@@ -128,19 +130,26 @@ public class DefaultEmailSenderProvider implements EmailSenderProvider {
             }
 
             msg.setHeader("To", address);
+
+            logger.info("Inside email Sender : receiver email id set : " + address);
             msg.setSubject(subject, "utf-8");
             msg.setContent(multipart);
             msg.saveChanges();
             msg.setSentDate(new Date());
 
             transport = session.getTransport("smtp");
+
+            logger.info("Inside email Sender | Before Connecting");
             if (auth) {
                 transport.connect(config.get("user"), config.get("password"));
             } else {
                 transport.connect();
             }
+            logger.info("Inside email Sender | After Connecting");
             transport.sendMessage(msg, new InternetAddress[]{new InternetAddress(address)});
+            logger.info("Inside email Sender | After sending");
         } catch (Exception e) {
+            logger.info("Inside email Sender | Sending failed| " + e.getMessage());
             ServicesLogger.LOGGER.failedToSendEmail(e);
             throw new EmailException(e);
         } finally {

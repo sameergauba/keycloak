@@ -40,6 +40,7 @@ public class UserCredentialModel implements CredentialInput {
     public static final String HOTP = CredentialModel.HOTP;
     public static final String CLIENT_CERT = CredentialModel.CLIENT_CERT;
     public static final String KERBEROS = CredentialModel.KERBEROS;
+    public static final String CODE = CredentialModel.CODE;
 
     protected String type;
     protected String value;
@@ -50,6 +51,13 @@ public class UserCredentialModel implements CredentialInput {
     protected Map<String, Object> notes = new HashMap<>();
 
     public UserCredentialModel() {
+    }
+
+    public static UserCredentialModel code(String code){
+        UserCredentialModel model = new UserCredentialModel();
+        model.setType(CODE);
+        model.setValue(code);
+        return model;
     }
 
     public static PasswordUserCredentialModel password(String password) {

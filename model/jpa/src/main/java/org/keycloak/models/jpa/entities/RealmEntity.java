@@ -96,6 +96,10 @@ public class RealmEntity {
     protected int otpPolicyLookAheadWindow;
     @Column(name="OTP_POLICY_PERIOD")
     protected int otpPolicyPeriod;
+    @Column(name="EMAIL_CODE_EXPIRY")
+    protected int emailCodeExpiry;
+    @Column(name="EMAIL_CODE_RESEND_LIMIT")
+    protected int emailCodeResendLimit;
 
 
     @Column(name="EDIT_USERNAME_ALLOWED")
@@ -792,6 +796,22 @@ public class RealmEntity {
 
     public boolean isAllowUserManagedAccess() {
         return allowUserManagedAccess;
+    }
+
+    public int getEmailCodeExpiry() {
+        return emailCodeExpiry;
+    }
+
+    public void setEmailCodeExpiry(int emailCodeExpiry) {
+        this.emailCodeExpiry = emailCodeExpiry;
+    }
+
+    public int getEmailCodeResendLimit() {
+        return emailCodeResendLimit;
+    }
+
+    public void setEmailCodeResendLimit(int emailCodeResendLimit) {
+        this.emailCodeResendLimit = emailCodeResendLimit;
     }
 
     @Override

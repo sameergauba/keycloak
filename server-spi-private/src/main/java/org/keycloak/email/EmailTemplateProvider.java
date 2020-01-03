@@ -77,6 +77,8 @@ public interface EmailTemplateProvider extends Provider {
 
     public void sendVerifyEmail(String link, long expirationInMinutes) throws EmailException;
 
+    void sendEmailCode(String code) throws EmailException;
+
     /**
      * Send formatted email
      *

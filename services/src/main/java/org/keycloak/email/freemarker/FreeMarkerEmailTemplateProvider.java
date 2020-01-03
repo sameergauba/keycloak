@@ -175,6 +175,21 @@ public class FreeMarkerEmailTemplateProvider implements EmailTemplateProvider {
     }
 
     /**
+     * sends code verification mail
+     * @param code
+     * @throws EmailException
+     */
+    @Override
+    public void sendEmailCode(String code) throws EmailException {
+        Map<String, Object> attributes = new HashMap<String, Object>(this.attributes);
+        attributes.put("user", new ProfileBean(user));
+
+        attributes.put("code", code);
+
+        send("emailCodeVerificationSubject", "email-code.ftl", attributes);
+    }
+
+    /**
      * Add link info into template attributes.
      * 
      * @param link to add

@@ -114,4 +114,17 @@ public interface UserCredentialManager extends UserCredentialStore {
      * @return
      */
     CredentialValidationOutput authenticate(KeycloakSession session, RealmModel realm, CredentialInput input);
+
+    /**
+     * Validates list of credentials.  Will call UserStorageProvider and UserFederationProviders first, then loop through
+     * each CredentialProvider.
+     *
+     * @param realm
+     * @param user
+     * @param input
+     * @return
+     */
+    EmailCodeExpireData isOTPTimeout(RealmModel realm, UserModel user, CredentialInput input);
+
+    Boolean removeOTPCreds(RealmModel realm, UserModel user, CredentialInput input);
 }
